@@ -7,6 +7,7 @@ import time
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import sys
+import threading
 
 url = 'https://www.espn.com/nfl/game/_/gameId/401131041'
 favHome = False
@@ -19,16 +20,27 @@ if favHome:
 else:
     print('Away')
 
-'''
-# test
-playsound('td.mp3')
-print('test finished')
-# end test
-'''
+def playTD():
+    playsound('td.mp3')
+
+def playTDThread():
+    t1 = threading.Thread(target=playTD)
+    t1.setDaemon(True)
+    t1.start()
 
 def printScore(awayScore, homeScore):
     print('\r' + str(awayScore) + ' - ' + str(homeScore), end=' ', flush = True)
 
+'''
+# test
+i = 1
+while i < 10:
+    playTDThread()
+    print(i)
+    time.sleep(0.05)
+    i += 1
+# end test
+'''
 
 print('Loading Score...', end = '', flush = True)
 options = Options()
@@ -37,7 +49,7 @@ driver = webdriver.Chrome("./chromedriver",options = options)
 driver.get(url)
 print('Done')
 
-startBefore = False
+startBefore = False 
 
 while True:
     html = driver.page_source
@@ -68,31 +80,22 @@ while True:
     html = driver.page_source
     bs = BeautifulSoup(html,'lxml')
     scores = bs.find_all('div',{'class': 'score'})
-    
     if (int)(scores[0].get_text()) != awayScore:
-        if (not favHome) and (int)(scores[0].get_text()) - awayScore >= diff:
+        if (int)(scores[0].get_text()) - awayScore >= diff:
             #time.sleep(10)
             print('Away TD!!')
-            playsound('td.mp3')
+            if not favHome:
+                playTDThread()
         else:
             print('Away scored!!')
-        '''
-        awayScore = (int)(scores[0].get_text())
-        homeScore = (int)(scores[1].get_text())
-        print(' ' + str(awayScore) + ' - ' + str(homeScore), end='\n')
-        '''
     if (int)(scores[1].get_text()) != homeScore:
-        if favHome and (int)(scores[1].get_text()) - homeScore >= diff:
+        if (int)(scores[1].get_text()) - homeScore >= diff:
             #time.sleep(10)
             print('Home TD!!')
-            playsound('td.mp3')
+            if favHome:
+                playTDThread()
         else:
             print('Home scored!!')
-        '''
-        awayScore = (int)(scores[0].get_text())
-        homeScore = (int)(scores[1].get_text())
-        print(' ' + str(awayScore) + ' - ' + str(homeScore), end='\n')
-        '''
     awayScore = (int)(scores[0].get_text())
     homeScore = (int)(scores[1].get_text())
     printScore(awayScore, homeScore)
@@ -102,60 +105,3 @@ while True:
         print('\nGame Ends')
         break
 
-
-
-'''
-#time new
-while True:
-    html = driver.page_source
-    bs = BeautifulSoup(html,'lxml')
-    print('   ' + bs.find('span', class_='status-detail').get_text(), end = '\r')
-'''
-
-
-
-
-
-
-
-'''
-html = urlopen(url)
-bs = BeautifulSoup(html.read(),'html.parser')
-scores = bs.find_all('div',{'class': 'score'})
-awayScore = (int)(scores[0].get_text())
-homeScore = (int)(scores[1].get_text())
-print(str(awayScore) + ' - ' + str(homeScore))
-
-'''
-'''
-#time
-while True:
-    html = urlopen(url)
-    bs = BeautifulSoup(html.read(),'html.parser')
-    print('   ' + bs.find('span', class_='status-detail').get_text(), end = '\r')
-'''
-'''
-
-while True:
-    #print(str(awayScore) + ' - ' + str(homeScore))
-    html = urlopen(url)
-    bs = BeautifulSoup(html.read(),'html.parser')
-    scores = bs.find_all('div',{'class': 'score'})
-
-    if awayScore - (int)(scores[0].get_text()) >= 6:
-        if not favHome:
-            playsound('td.mp3')
-        print('Away scored!!')
-        awayScore = (int)(scores[0].get_text())
-        print(str(awayScore) + ' - ' + str(homeScore))
-    if homeScore - (int)(scores[1].get_text()) >= 6:
-        if favHome:
-            playsound('td.mp3')
-        print('Home scored!!')
-        homeScore = (int)(scores[1].get_text())
-        print(str(awayScore) + ' - ' + str(homeScore))
-        
-    awayScore = (int)(scores[0].get_text())
-    homeScore = (int)(scores[1].get_text())
-    #time.sleep(2)
-'''
